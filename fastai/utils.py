@@ -152,7 +152,7 @@ class SGD2(optimizers.Optimizer):
 
     def __init__(self, split1_layer, split2_layer, lr=[0.0001, .001, .01], momentum=0., decay=0.,
                  nesterov=False, **kwargs):
-        super(SGD2, self).__init__(**kwargs)
+        super(optimizers.Optimizer, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
             self.iterations = K.variable(0, dtype='int64', name='iterations')
             self.lr = K.variable(lr, name='lr')
@@ -219,7 +219,7 @@ def finetune(model, num_classes):
     return Model(model.input, preds)
 
     
-def finetune2(model, pool_layer, num_classes):
+def finetune2(model, num_classes, pool_layer_name):
     '''removes the last layers of a nn and adds a fully-connected layers 
     for predicting num_classes
     
@@ -228,6 +228,7 @@ def finetune2(model, pool_layer, num_classes):
         pool_layer: pooling layer after the final conv layers
             *note this will be replaced by a AvgMaxPoolConcatenation
     '''
+    pool_layer = [layer for layer in model.layers if layer.name == pool_layer_name][0]
     model = Model(model.input, pool_layer.input)
     model.layers.pop()
     for layer in model.layers: layer.trainable = False
@@ -236,34 +237,10 @@ def finetune2(model, pool_layer, num_classes):
     b = keras.layers.AveragePooling2D(pool_size=(7,7),name='avgpool')(last)
     x = keras.layers.concatenate([a,b], axis = 1)
     x = keras.layers.Flatten()(x)
-    x = keras.layers.BatchNormalization(epsilon=1e-05, name='start_flat')(x)
-    #x = keras.layers.Dropout(.25)(x)
+    x = keras.layers.BatchNormalization(epsilon=1e-05, name='fc1000')(x)
+    x = keras.layers.Dropout(.25)(x)
     x = keras.layers.Dense(512, activation='relu')(x)
     x = keras.layers.BatchNormalization(epsilon=1e-05)(x)
-    #x = keras.layers.Dropout(.5)(x)
+    x = keras.layers.Dropout(.25)(x)
     preds = keras.layers.Dense(num_classes, activation='softmax')(x)
     return Model(model.input, preds)
-
-class CenterCrop():
-    def __init__(self, sz): self.sz = sz
-    def __call__(self, img):
-        if K._image_data_format == 'channels_last':
-            r,c,_= img.shape
-            return img[int((r-self.sz)/2):int((r-self.sz)/2)+self.sz, int((c-self.sz)/2):int((c-self.sz)/2)+self.sz]
-        else:
-            _,r,c= img.shape
-            return img[:, int((r-self.sz)/2):int((r-self.sz)/2)+self.sz, int((c-self.sz)/2):int((c-self.sz)/2)+self.sz]
-
-class RandCrop():
-    def __init__(self, sz): self.sz = sz
-    def __call__(self, img):
-        if K._image_data_format == 'channels_last':
-            r,c,_= img.shape
-            start_r = random.randint(0, r-self.sz)
-            start_c = random.randint(0, c-self.sz)
-            return img[start_r:start_r+self.sz, start_c:start_c+self.sz]
-        else:
-            _,r,c= img.shape
-            start_r = random.randint(0, r-self.sz)
-            start_c = random.randint(0, c-self.sz)
-            return img[:, start_r:start_r+self.sz, start_c:start_c+self.sz]
