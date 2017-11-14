@@ -26,7 +26,7 @@ class ImageClassifierData:
         train = tfms[0].flow_from_directory(path+trn_name, target_size=(sz,sz),
                 class_mode='categorical', shuffle=True, batch_size=bs, **kwargs)
         valid = tfms[0].flow_from_directory(path+val_name, target_size=(sz,sz),
-                class_mode='categorical', shuffle=True, batch_size=bs, **kwargs)
+                class_mode='categorical', shuffle=False, batch_size=bs, **kwargs)
         return train,valid
     
 class CropType(IntEnum):
