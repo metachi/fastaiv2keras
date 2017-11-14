@@ -2,7 +2,7 @@ import keras
 from keras.callbacks import Callback
 from keras import backend as K
 from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Model
+from keras.models import Model, load_model
 from keras import optimizers
 import math
 import random
@@ -212,10 +212,10 @@ class SGD2(optimizers.Optimizer):
 def finetune(model, num_classes):
     '''removes the last layer of a nn and adds a fully-connected layer for predicting num_classes
     '''
-    model.layers.pop()
+    #model.layers.pop()
     for layer in model.layers: layer.trainable = False
-    last = model.output
-    preds = keras.layers.Dense(num_classes, activation='softmax')(last)
+    last = model.layers[-2].output
+    preds = keras.layers.Dense(num_classes, activation='softmax', name='dense_1')(last)
     return Model(model.input, preds)
 
     
@@ -237,7 +237,7 @@ def finetune2(model, num_classes, pool_layer_name):
     b = keras.layers.AveragePooling2D(pool_size=(7,7),name='avgpool')(last)
     x = keras.layers.concatenate([a,b], axis = 1)
     x = keras.layers.Flatten()(x)
-    x = keras.layers.BatchNormalization(epsilon=1e-05, name='fc1000')(x)
+    x = keras.layers.BatchNormalization(epsilon=1e-05, name='dense_1')(x)
     x = keras.layers.Dropout(.25)(x)
     x = keras.layers.Dense(512, activation='relu')(x)
     x = keras.layers.BatchNormalization(epsilon=1e-05)(x)
