@@ -9,7 +9,7 @@ from keras.models import Model, load_model
 import math
 
 model_meta = {
-    ResNet50:['res4a_branch2a','dense_1'], VGG16: [0,22], VGG19:[8,6], 
+    ResNet50:['res4a_branch2a','fc_start'], VGG16: [0,22], VGG19:[8,6], 
     InceptionV3:[8,6], Xception:[8,6],
 }
 
