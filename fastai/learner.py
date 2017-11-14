@@ -27,7 +27,7 @@ class ConvLearner(): #todo implement learner parent class
             model = finetune(arch(), data[0].num_class)
         return cls(model, data, arch)
     def fit(self, lrs, n_cycle, cycle_len=None, cycle_mult=1, 
-            metrics=['accuracy'], callbacks = [], **kwargs):
+            metrics=['accuracy'], callbacks = [], workers=4, **kwargs):
         '''
         @args:
             lrs: learning rates, can pass 1 or a list of 3
@@ -61,6 +61,7 @@ class ConvLearner(): #todo implement learner parent class
                                  steps_per_epoch=math.ceil(self.data[0].samples/self.data[0].batch_size),
                                  epochs=epochs, 
                                  callbacks=callbacks, 
+                                 workers=workers,
 #                         validation_data=val_batches, 
 #                         validation_steps=val_batches.samples
                                 )
@@ -74,11 +75,11 @@ class ConvLearner(): #todo implement learner parent class
         self.model.save(path)
     def load(self,path):
         self.model = load_model(path)
-    def lr_find(self,jump=6):
+    def lr_find(self,jump=6,workers=4):
         self.sched = LR_Find(math.ceil(self.data[0].samples/self.data[0].batch_size),jump=jump)
         sgd = optimizers.SGD(lr=1e-05, momentum=0.9)
         self.model.compile(loss='categorical_crossentropy',optimizer=sgd)
         self.model.fit_generator(self.data[0],
                             steps_per_epoch=math.ceil(self.data[0].samples/self.data[0].batch_size),
-                    epochs=1, callbacks=[self.sched],
+                    epochs=1, callbacks=[self.sched], workers=workers
                    )
