@@ -62,8 +62,8 @@ class ConvLearner(): #todo implement learner parent class
                                  epochs=epochs, 
                                  callbacks=callbacks, 
                                  workers=workers,
-#                         validation_data=val_batches, 
-#                         validation_steps=val_batches.samples
+                         validation_data=self.data[1], 
+                         validation_steps=math.ceil(self.data[1].samples/self.data[1].batch_size),
                                 )
     def unfreeze(self):
         '''unfreeze all layers of the model'''

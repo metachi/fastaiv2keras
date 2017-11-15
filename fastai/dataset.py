@@ -1,6 +1,8 @@
 from .transform import *
+from .learner import *
 from enum import IntEnum
 from keras.preprocessing.image import ImageDataGenerator
+from keras.applications.resnet50 import preprocess_input
 
 class ImageClassifierData:
     @classmethod
@@ -46,14 +48,18 @@ def tfms_from_model(model, sz, crop_type=CropType.CENTER, **kwargs):
     @returns:
         a tuple of train and validation Keras ImageDataGenerators
     '''
-    crop = CenterCrop(sz)
+    if model == ResNet50:
+        preprocess = preprocess_input
+    crop = CenterCrop(sz,preprocess=preprocess)
     if crop_type == CropType.RANDOM:
-        crop = RandCrop(sz)
+        crop = RandCrop(sz,preprocess=preprocess)
     elif crop_type == CropType.NO:
         crop = None
     
     train_gen = ImageDataGenerator(preprocessing_function=crop, **kwargs)
-    val_gen = ImageDataGenerator(preprocessing_function=CenterCrop(sz))
+    val_gen = ImageDataGenerator(preprocessing_function=CenterCrop(sz,preprocess=preprocess))
+    #train_gen = ImageDataGenerator(preprocessing_function=preprocess_input, **kwargs)
+    #val_gen = ImageDataGenerator(preprocessing_function=preprocess_input)
     train_gen.sz = sz
     val_gen.sz = sz
     return train_gen, val_gen
