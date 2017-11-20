@@ -214,12 +214,13 @@ def finetune(model, num_classes):
     '''
     #model.layers.pop()
     for layer in model.layers: layer.trainable = False
-    last = model.layers[-2].output
-    preds = keras.layers.Dense(num_classes, activation='softmax', name='fc_start')(last)
+    last = model.layers[-1].output
+    x = keras.layers.Flatten()(last)
+    preds = keras.layers.Dense(num_classes, activation='softmax', name='fc_start')(x)
     return Model(model.input, preds)
 
     
-def finetune2(model, num_classes, pool_layer_name):
+def finetune2(model, num_classes, pool_layer_name, dropout=[.25,.25], dense=1024):
     '''removes the last layers of a nn and adds a fully-connected layers 
     for predicting num_classes
     
@@ -238,9 +239,9 @@ def finetune2(model, num_classes, pool_layer_name):
     x = keras.layers.concatenate([a,b], axis = 1)
     x = keras.layers.Flatten()(x)
     x = keras.layers.BatchNormalization(epsilon=1e-05, name='fc_start')(x)
-    x = keras.layers.Dropout(.25)(x)
-    x = keras.layers.Dense(1024, activation='relu')(x)
+    x = keras.layers.Dropout(dropout[0])(x)
+    x = keras.layers.Dense(dense, activation='relu')(x)
     x = keras.layers.BatchNormalization(epsilon=1e-05)(x)
-    x = keras.layers.Dropout(.25)(x)
+    x = keras.layers.Dropout(dropout[1])(x)
     preds = keras.layers.Dense(num_classes, activation='softmax')(x)
     return Model(model.input, preds)

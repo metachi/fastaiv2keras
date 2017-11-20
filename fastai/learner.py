@@ -19,12 +19,12 @@ class ConvLearner(): #todo implement learner parent class
         self.arch = arch
         self.model = model
     @classmethod
-    def pretrained(cls, arch, data, precompute=False, finetune2_layer=None):
+    def pretrained(cls, arch, data, precompute=False, finetune2_layer=None, include_top=False, **kwargs):
         #todo implement precomputed activations for faster training
         if finetune2_layer:
-            model = finetune2(arch(), data[0].num_class, finetune2_layer)
+            model = finetune2(arch(input_shape=data[0].image_shape, include_top=include_top), data[0].num_class, finetune2_layer, **kwargs)
         else:
-            model = finetune(arch(), data[0].num_class)
+            model = finetune(arch(input_shape=data[0].image_shape, include_top=include_top), data[0].num_class, **kwargs)
         return cls(model, data, arch)
     def fit(self, lrs, n_cycle, cycle_len=None, cycle_mult=1, 
             metrics=['accuracy'], callbacks = [], workers=4, **kwargs):
